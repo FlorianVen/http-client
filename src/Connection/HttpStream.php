@@ -54,6 +54,8 @@ final class HttpStream implements Stream
     /** @var callable|null */
     private $releaseCallback;
 
+    private bool $used = false;
+
     private function __construct(
         SocketAddress $localAddress,
         SocketAddress $remoteAddress,
@@ -80,11 +82,11 @@ final class HttpStream implements Stream
      */
     public function request(Request $request, Cancellation $cancellation): Response
     {
-        if ($this->releaseCallback === null) {
+        if ($this->used) {
             throw new \Error('A stream may only be used for a single request');
         }
 
-        $this->releaseCallback = null;
+        $this->used = true;
 
         return processRequest($request, [], fn (): Response => ($this->requestCallback)($request, $cancellation, $this));
     }
