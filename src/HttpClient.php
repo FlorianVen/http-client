@@ -3,6 +3,7 @@
 namespace Amp\Http\Client;
 
 use Amp\Cancellation;
+use Amp\Http\Client\Connection\ConnectionLimitingPool;
 use Amp\NullCancellation;
 
 /**
@@ -24,5 +25,12 @@ final class HttpClient implements DelegateHttpClient
     public function request(Request $request, ?Cancellation $cancellation = null): Response
     {
         return $this->httpClient->request($request, $cancellation ?? new NullCancellation);
+    }
+
+    public function close(): void
+    {
+        if ($this->httpClient instanceof PooledHttpClient) {
+            $this->httpClient->close();
+        }
     }
 }

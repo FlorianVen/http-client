@@ -4,6 +4,7 @@ namespace Amp\Http\Client;
 
 use Amp\Cancellation;
 use Amp\ForbidSerialization;
+use Amp\Http\Client\Connection\ConnectionLimitingPool;
 use Amp\Http\Client\Connection\ConnectionPool;
 use Amp\Http\Client\Connection\InterceptedStream;
 use Amp\Http\Client\Connection\UnlimitedConnectionPool;
@@ -59,5 +60,12 @@ final class PooledHttpClient implements DelegateHttpClient
     {
         // clone is automatically denied to all external calls
         // final protected instead of private to also force denial for all children
+    }
+
+    public function close(): void
+    {
+        if ($this->connectionPool instanceof ConnectionLimitingPool) {
+            $this->connectionPool->close();
+        }
     }
 }

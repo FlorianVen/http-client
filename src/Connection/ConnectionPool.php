@@ -3,6 +3,7 @@
 namespace Amp\Http\Client\Connection;
 
 use Amp\Cancellation;
+use Amp\Closable;
 use Amp\Http\Client\Request;
 
 interface ConnectionPool

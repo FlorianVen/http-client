@@ -22,6 +22,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Pipeline;
 use Amp\Socket;
 use Revolt\EventLoop;
+use Symfony\Contracts\EventDispatcher\Event;
 use function Amp\async;
 use function Amp\delay;
 
@@ -681,7 +682,7 @@ class ClientHttpBinIntegrationTest extends AsyncTestCase
         for ($i = 0; $i < 3; $i++) {
             $client = (new HttpClientBuilder())->build();
 
-            $request = new Request('http://httpbin.org/');
+            $request = new Request('http://google.org/');
 
             $response = $client->request($request);
             $response->getBody()->buffer();
@@ -694,6 +695,34 @@ class ClientHttpBinIntegrationTest extends AsyncTestCase
 
             self::assertSame($initialIdentifierCount, $identifierCount);
         }
+    }
+
+    public function testNoMemoryLeak2(): void
+    {
+        $client = (new HttpClientBuilder())->build();
+
+        $startMemoryUsage = $this->getMemoryUsage();
+        for ($i = 0; $i < 5; ++$i) {
+            async(static function () use (&$client) {
+                $request = new Request('https://google.com');
+                $client->request($request)->getBody()->buffer();
+            })->await();
+        }
+
+        async(fn () => $client->close())->await();
+        unset($client);
+        unset($request);
+
+        delay(1);
+
+        self::assertEquals($startMemoryUsage, $this->getMemoryUsage());
+    }
+
+    private function getMemoryUsage(): int
+    {
+        gc_collect_cycles();
+        gc_mem_caches();
+        return memory_get_usage();
     }
 
     public function tearDown(): void

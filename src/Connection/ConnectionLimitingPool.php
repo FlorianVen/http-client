@@ -85,6 +85,11 @@ final class ConnectionLimitingPool implements ConnectionPool
         $this->openConnectionCount = 0;
     }
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     public function getTotalConnectionAttempts(): int
     {
         return $this->totalConnectionAttempts;
@@ -362,6 +367,18 @@ final class ConnectionLimitingPool implements ConnectionPool
 
         if (\count($this->connections[$uri]) === 0) {
             unset($this->connections[$uri], $this->waitForPriorConnection[$uri]);
+        }
+    }
+
+    public function close(): void
+    {
+        foreach ($this->connections as $connectionFutures) {
+            foreach ($connectionFutures as $connectionFuture) {
+                async(static function () use ($connectionFuture) {
+                    $connection = $connectionFuture->await();
+                    $connection->close();
+                })->await();
+            }
         }
     }
 }

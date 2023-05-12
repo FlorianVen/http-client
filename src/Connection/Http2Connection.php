@@ -30,11 +30,6 @@ final class Http2Connection implements Connection
         $this->processor = new Http2ConnectionProcessor($socket);
     }
 
-    public function __destruct()
-    {
-        $this->close();
-    }
-
     public function isIdle(): bool
     {
         return $this->processor->isIdle();

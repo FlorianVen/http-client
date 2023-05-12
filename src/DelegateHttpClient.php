@@ -3,6 +3,7 @@
 namespace Amp\Http\Client;
 
 use Amp\Cancellation;
+use Amp\Closable;
 
 /**
  * Base HTTP client interface for use in {@see ApplicationInterceptor}.
